@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Real-Time Chess</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="w-full h-screen flex flex-col items-center justify-center px-4">
+        <h1 class="text-4xl font-bold mb-6 text-white drop-shadow-xl tracking-wide animate-fadeIn">
+            ♛ Real-Time Chess ♚
+        </h1>
+
+        <div class="chessboard" id="chessboard"></div>
+
+        <div class="mt-6 text-lg space-y-4 text-center">
+            <p id="turnIndicator">Loading...</p>
+            <div class="flex justify-center gap-10 text-base font-mono">
+                <div class="text-center">
+                    <p class="timer-label">♔ White Time:</p>
+                    <p id="whiteTimer" class="timer-value">0s</p>
+                </div>
+                <div class="text-center">
+                    <p class="timer-label">♚ Black Time:</p>
+                    <p id="blackTimer" class="timer-value">0s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverDialog"
+        class="fixed hidden top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 text-white p-8 rounded-lg shadow-xl z-50 text-center animate-fadeInDialog">
+        <h2 class="text-2xl font-bold mb-4">Game Over</h2>
+        <p id="gameResult" class="mb-6 text-lg">Result</p>
+        <div class="flex justify-center gap-4">
+            <button onclick="startNewGame()"
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition">New
+                Game</button>
+            <button onclick="closeGameDialog()"
+                class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition">Close</button>
+        </div>
+    </div>
+
+    <div class="absolute top-6 right-6 space-x-3 z-40">
+        <button onclick="startNewGame()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow">🔄 New
+            Game</button>
+        <button onclick="resignGame()"
+            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow">🏳 Resign</button>
+    </div>
+    <div class="captured-container">
+        <!-- Display captured white pieces on the left -->
+        <div id="capturedWhite" class="captured white-side"></div>
+
+        <!-- Display captured black pieces on the right -->
+        <div id="capturedBlack" class="captured black-side"></div>
+    </div>
+
+
+
+
+    <!-- ✅ Updated Sound Effects Paths -->
+    <audio id="moveSound" src="/sounds/moveSound.mp3"></audio>
+    <audio id="checkSound" src="/sounds/checkSound.mp3"></audio>
+    <audio id="gameOverSound" src="/sounds/gameOver.mp3"></audio>
+
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" crossorigin="anonymous"></script>
+    <script src="/js/chessGame.js"></script>
+
+    <!-- ✅ Sound Playback Script -->
+    <script>
+        let audioUnlocked = false;
+
+        document.body.addEventListener('click', () => {
+            audioUnlocked = true;
+        });
+
+        function playSound(type) {
+            if (!audioUnlocked) return;
+
+            const sounds = {
+                move: document.getElementById("moveSound"),
+                check: document.getElementById("checkSound"),
+                gameover: document.getElementById("gameOverSound")
+            };
+
+            const sound = sounds[type];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(err => console.warn("Audio play failed:", err));
+            }
+        }
+
+        // New Game Functionality
+        function startNewGame() {
+            document.getElementById("gameOverDialog").style.display = "none"; // Hide any game over dialogs
+            const waitingDialog = document.getElementById("waitingDialog");
+            waitingDialog.style.display = "block"; // Show waiting message
+
+            setTimeout(() => {
+                // Restart the game (replace this with the logic to reset your game)
+                alert("Starting new game...");
+                // Restart the server (This depends on your backend setup)
+                // Example: socket.emit('restartGame'); if using socket.io
+                location.reload(); // Reload the page to restart the game
+            }, 2000); // Add a delay before starting the new game
+        }
+
+        // Resign Game Functionality
+        function resignGame() {
+            const playerColor = "white"; // This should be dynamic based on the current player
+            const opponentColor = playerColor === "white" ? "black" : "white";
+
+            document.getElementById("gameOverDialog").style.display = "block";
+            document.getElementById("gameResult").textContent = `${playerColor.charAt(0).toUpperCase() + playerColor.slice(1)} resigned! ${opponentColor.charAt(0).toUpperCase() + opponentColor.slice(1)} wins!`;
+            playSound('gameover'); // Play sound for game over
+
+            setTimeout(() => {
+                const playAgain = confirm("Do you want to play again?");
+                if (playAgain) {
+                    location.reload(); // Restart the game
+                } else {
+                    // Close the game (Example: Emit an event to notify the opponent)
+                    alert("Game over. Thanks for playing!");
+                }
+            }, 3000);
+        }
+
+        // Close the game over dialog
+        function closeGameDialog() {
+            document.getElementById("gameOverDialog").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>
